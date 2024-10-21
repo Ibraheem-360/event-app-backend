@@ -4,12 +4,15 @@ WORKDIR /app
 
 # Copy the project files into the container
 COPY pom.xml .
+# Copy dependencies to leverage Docker caching and avoid rebuilding them every time.
+RUN mvn dependency:go-offline
+
 COPY src ./src
 
 # Build the Spring Boot application
 RUN mvn clean package -DskipTests
 
-# Use an official OpenJDK image to run the application
+# Use a lightweight OpenJDK image to run the application
 FROM openjdk:17-jdk-slim
 WORKDIR /app
 
@@ -17,7 +20,7 @@ WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 
 # Expose the server port
-EXPOSE 8776
+EXPOSE 9799
 
 # Start the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
